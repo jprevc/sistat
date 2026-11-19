@@ -12,6 +12,7 @@ def test_table_id_normalisation():
 
 def test_search_is_case_and_accent_insensitive(client):
     assert [t.id for t in client.search("AIR temperatures")] == ["0156101S.px"]
+    assert [t.id for t in client.search("áir temperatures")] == ["0156101S.px"]
     assert len(client.search("unemployed persons")) == 3
     assert client.search("nothing like this") == []
 

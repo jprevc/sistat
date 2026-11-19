@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import unicodedata
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
 
 import httpx
 
-from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata
+from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -23,11 +22,6 @@ def table_id(table: str) -> str:
     if t.lower().endswith(".px"):
         t = t[:-3]
     return t.upper() + ".px"
-
-
-def _fold(s: str) -> str:
-    """Case- and accent-insensitive form, so 'brezposelnost' matches 'Brezposelnost' and 'cas' matches 'čas'."""
-    return "".join(c for c in unicodedata.normalize("NFKD", s.casefold()) if not unicodedata.combining(c))
 
 
 class Client:
@@ -72,8 +66,8 @@ class Client:
 
     def search(self, text: str) -> list[TableInfo]:
         """Tables whose id or title contains every word of ``text`` (case- and accent-insensitive)."""
-        words = _fold(text).split()
-        return [t for t in self.tables() if all(w in _fold(f"{t.id} {t.text}") for w in words)]
+        words = fold(text).split()
+        return [t for t in self.tables() if all(w in fold(f"{t.id} {t.text}") for w in words)]
 
     def metadata(self, table: str) -> TableMetadata:
         return self.px.metadata(table_id(table))
