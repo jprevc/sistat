@@ -3,8 +3,8 @@ import json
 import httpx
 import pytest
 
-from sistat import APIError, QueryError
-from sistat.pxweb import PxWebClient
+from sistat import APIError, Client, QueryError
+from sistat.pxweb import PxWebClient, ServerLimits
 
 from .conftest import FakePxWeb
 
@@ -97,3 +97,15 @@ def test_selection_matches_without_accents(px, fake, variable, values):
     px.get_records(TABLE, {variable: values, "PERIOD, YEAR": "1981-1990", "MEASURE": "0"})
     sel = {q["code"]: q["selection"]["values"] for q in bodies(fake)[0]["query"]}
     assert sel["METEOROLOŠKA POSTAJA"] == ["10"]
+
+
+def test_limits_are_typed(px):
+    assert px.limits == ServerLimits(cell_limit=50_000_000, max_calls=500, time_window=10.0)
+
+
+def test_constructing_a_client_makes_no_request(fake):
+    with PxWebClient("https://example.test/api/v1", "Data", "en", transport=httpx.MockTransport(fake)):
+        pass
+    with Client(transport=httpx.MockTransport(fake)):
+        pass
+    assert fake.requests == []

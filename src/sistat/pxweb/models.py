@@ -63,3 +63,26 @@ class TableMetadata:
         for v in self.variables:
             n *= len(v.values)
         return n
+
+
+@dataclass(frozen=True)
+class ServerLimits:
+    """What the server allows: the most cells per request (the cell limit) and at most
+    ``max_calls`` requests per ``time_window`` seconds (the rate limit)."""
+
+    cell_limit: int
+    max_calls: int
+    time_window: float
+
+    @classmethod
+    def from_config(cls, cfg: dict) -> ServerLimits:
+        """Parse a PxWeb ``?config`` response; keys it lacks fall back to :data:`DEFAULT_LIMITS`."""
+        d = DEFAULT_LIMITS
+        return cls(
+            cell_limit=int(cfg.get("maxCells") or cfg.get("maxValues") or d.cell_limit),
+            max_calls=int(cfg.get("maxCalls", d.max_calls)),
+            time_window=float(cfg.get("timeWindow", d.time_window)),
+        )
+
+
+DEFAULT_LIMITS = ServerLimits(cell_limit=100_000, max_calls=30, time_window=10.0)
