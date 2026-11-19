@@ -84,3 +84,16 @@ def test_api_error(px):
     with pytest.raises(APIError) as e:
         px.metadata("NOPE.px")
     assert e.value.status_code == 400
+
+
+@pytest.mark.parametrize(
+    ("variable", "values"),
+    [
+        ("meteoroloska postaja", "10"),  # Variable code without accents
+        (STATION, ["ljubljana, bezigrad", "ljubljana, bez*"]),  # Value label and glob without accents
+    ],
+)
+def test_selection_matches_without_accents(px, fake, variable, values):
+    px.get_records(TABLE, {variable: values, "PERIOD, YEAR": "1981-1990", "MEASURE": "0"})
+    sel = {q["code"]: q["selection"]["values"] for q in bodies(fake)[0]["query"]}
+    assert sel["METEOROLOŠKA POSTAJA"] == ["10"]
