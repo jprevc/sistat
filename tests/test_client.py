@@ -1,6 +1,8 @@
+import httpx
 import pytest
 
-from sistat import Client, table_id
+import sistat
+from sistat import Client, pxweb, table_id
 
 STATION = "METEOROLOGICAL STATION"
 
@@ -8,6 +10,21 @@ STATION = "METEOROLOGICAL STATION"
 def test_table_id_normalisation():
     assert table_id("0156101S") == "0156101S.px"
     assert table_id("0156101s.PX") == "0156101S.px"
+
+
+def test_constructing_a_client_makes_no_request(fake):
+    with Client(transport=httpx.MockTransport(fake)):
+        pass
+    assert fake.requests == []
+
+
+def test_client_identifies_itself_as_sistat(client, fake):
+    client.search("air")
+    assert all(r.headers["User-Agent"].startswith("sistat-python/") for r in fake.requests)
+
+
+def test_errors_are_the_pxweb_errors():
+    assert (sistat.PxWebError, sistat.APIError, sistat.QueryError) == (pxweb.PxWebError, pxweb.APIError, pxweb.QueryError)
 
 
 def test_search_is_case_and_accent_insensitive(client):

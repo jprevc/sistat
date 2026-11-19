@@ -6,7 +6,6 @@ Knows nothing about SiStat specifically: give it any PxWeb v1 base URL
 
 from __future__ import annotations
 
-import builtins
 from collections.abc import Mapping
 from types import TracebackType
 from typing import Any
@@ -19,6 +18,8 @@ from .jsonstat import to_records
 from .models import ServerLimits, TableInfo, TableMetadata
 from .session import Session
 
+USER_AGENT = "pxweb-python"
+
 
 class PxWebClient:
     def __init__(
@@ -30,13 +31,17 @@ class PxWebClient:
         timeout: float = 30.0,
         retries: int = 3,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str = USER_AGENT,
     ):
-        """``api_root`` is the part before the language, e.g. ``https://host/App/api/v1``."""
+        """``api_root`` is the part before the language, e.g. ``https://host/App/api/v1``.
+
+        Applications built on this client should pass their own ``user_agent`` so server operators can tell them apart.
+        """
         self.api_root = api_root.rstrip("/")
         self.database = database
         self.lang = lang
         self.retries = retries
-        self._http = httpx.Client(timeout=timeout, transport=transport, headers={"User-Agent": "sistat-python"})
+        self._http = httpx.Client(timeout=timeout, transport=transport, headers={"User-Agent": user_agent})
         self._session = Session(self._http, f"{self.api_root}/{lang}/?config", retries=retries)
         self._meta: dict[str, TableMetadata] = {}
 
@@ -66,13 +71,13 @@ class PxWebClient:
         """The server's cell limit and rate limit, read from ``?config`` on first use (defaults if unavailable)."""
         return self._session.limits
 
-    def _post(self, table: str, query: builtins.list[dict[str, Any]]) -> dict[str, Any]:
+    def _post(self, table: str, query: list[dict[str, Any]]) -> dict[str, Any]:
         """POST a raw PxWeb query (list of ``{"code", "selection"}``) and return the json-stat2 dataset."""
         body = {"query": query, "response": {"format": "json-stat2"}}
         dataset: dict[str, Any] = self._session.send("POST", self._url(table), json=body).json()
         return dataset
 
-    def list(self, path: str = "") -> list[TableInfo]:
+    def tables(self, path: str = "") -> list[TableInfo]:
         """List tables (and folders) at ``path`` within the database."""
         return [TableInfo.from_json(d) for d in self._session.send("GET", self._url(path)).json()]
 
@@ -82,9 +87,7 @@ class PxWebClient:
             self._meta[table] = TableMetadata.from_json(self._session.send("GET", self._url(table)).json())
         return self._meta[table]
 
-    def get_records(
-        self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False
-    ) -> builtins.list[dict[str, Any]]:
+    def get_records(self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False) -> list[dict[str, Any]]:
         """Fetch data as a list of records, one per cell.
 
         ``selections`` maps a variable (code or label, case-insensitive) to a value code or label,
@@ -92,7 +95,7 @@ class PxWebClient:
         are fully selected. Queries over the server's cell limit are split and the results merged.
         """
         resolved = q.resolve(self.metadata(table), selections)
-        records: builtins.list[dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
         for chunk in q.split(resolved, self.limits.cell_limit):
             records.extend(to_records(self._post(table, [r.to_json() for r in chunk]), codes=codes))
         return records

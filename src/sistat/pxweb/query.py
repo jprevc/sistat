@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
-from ..errors import QueryError
+from .errors import QueryError
 from .models import TableMetadata, Variable
 
 T = TypeVar("T")

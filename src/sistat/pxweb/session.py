@@ -10,10 +10,10 @@ from typing import Any, Protocol
 
 import httpx
 
-from ..errors import APIError
+from .errors import APIError
 from .models import DEFAULT_LIMITS, ServerLimits
 
-log = logging.getLogger("sistat")
+log = logging.getLogger("pxweb")
 
 RETRY_STATUS = {429, 502, 503, 504}
 MAX_RETRY_AFTER = 60.0
