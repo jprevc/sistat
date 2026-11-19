@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import httpx
 
-from .pxweb import PxWebClient, TableInfo, TableMetadata, to_records
-from .pxweb import query as q
+from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -49,7 +48,6 @@ class Client:
     ):
         self.px = PxWebClient(api_root, DATABASE, lang, timeout=timeout, transport=transport)
         self._tables: list[TableInfo] | None = None
-        self._meta: dict[str, TableMetadata] = {}
 
     @property
     def lang(self) -> str:
@@ -78,24 +76,15 @@ class Client:
         return [t for t in self.tables() if all(w in _fold(f"{t.id} {t.text}") for w in words)]
 
     def metadata(self, table: str) -> TableMetadata:
-        tid = table_id(table)
-        if tid not in self._meta:
-            self._meta[tid] = self.px.metadata(tid)
-        return self._meta[tid]
+        return self.px.metadata(table_id(table))
 
     # -- data ---------------------------------------------------------------
 
-    def get_records(self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False) -> list[dict]:
+    def get_records(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> list[dict]:
         """Fetch data as a list of dicts, one per cell. See :meth:`get` for ``selections``."""
-        tid = table_id(table)
-        resolved = q.resolve(self.metadata(tid), selections)
-        records: list[dict] = []
-        for chunk in q.split(resolved, self.px.max_cells):
-            data = self.px.query(tid, [r.to_json() for r in chunk])
-            records.extend(to_records(data, codes=codes))
-        return records
+        return self.px.get_records(table_id(table), selections, codes=codes)
 
-    def get(self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False) -> pd.DataFrame:
+    def get(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> pd.DataFrame:
         """Fetch data as a long-format pandas DataFrame.
 
         ``selections`` maps a variable (code or English/Slovenian label, case-insensitive) to:

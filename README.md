@@ -66,10 +66,12 @@ under the server's rate limit automatically.
 
 ## Layout
 
-- `sistat.pxweb`: a generic PxWeb **v1** client (HTTP, rate limiting, query building, json-stat2
-  parsing). It never imports from the SiStat layer, so it could be split into its own package.
+- `sistat.pxweb`: a generic PxWeb **v1** client that works on its own:
+  `PxWebClient.get_records(table, selections)` resolves selections by label or code, splits
+  queries at the server's cell limit, rate-limits, and returns merged records. It never imports
+  from the SiStat layer, so it could be split into its own package.
 - `sistat.Client`: SiStat specifics such as the base URL, table-id normalisation, cached table
-  search and lookup by label.
+  search and the pandas DataFrame.
 
 ## Development
 

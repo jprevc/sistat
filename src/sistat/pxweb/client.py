@@ -9,11 +9,14 @@ from __future__ import annotations
 import threading
 import time
 from collections import deque
+from collections.abc import Mapping
 from urllib.parse import quote
 
 import httpx
 
 from ..errors import APIError
+from . import query as q
+from .jsonstat import to_records
 from .models import TableInfo, TableMetadata
 
 DEFAULT_LIMITS = {"maxValues": 100_000, "maxCalls": 30, "timeWindow": 10}
@@ -59,6 +62,7 @@ class PxWebClient:
         self._http = httpx.Client(timeout=timeout, transport=transport, headers={"User-Agent": "sistat-python"})
         self._limits: dict | None = None
         self._limiter: RateLimiter | None = None
+        self._meta: dict[str, TableMetadata] = {}
 
     # -- plumbing -----------------------------------------------------------
 
@@ -115,18 +119,34 @@ class PxWebClient:
         return self._limits
 
     @property
-    def max_cells(self) -> int:
+    def _max_cells(self) -> int:
         lim = self.limits
         return int(lim.get("maxCells") or lim["maxValues"])
+
+    def _post(self, table: str, query: list[dict]) -> dict:
+        """POST a raw PxWeb query (list of ``{"code", "selection"}``) and return the json-stat2 dataset."""
+        body = {"query": query, "response": {"format": "json-stat2"}}
+        return self._request("POST", self._url(table), json=body).json()
 
     def list(self, path: str = "") -> list[TableInfo]:
         """List tables (and folders) at ``path`` within the database."""
         return [TableInfo.from_json(d) for d in self._request("GET", self._url(path)).json()]
 
     def metadata(self, table: str) -> TableMetadata:
-        return TableMetadata.from_json(self._request("GET", self._url(table)).json())
+        """The table's variables and values (fetched once, cached on the client)."""
+        if table not in self._meta:
+            self._meta[table] = TableMetadata.from_json(self._request("GET", self._url(table)).json())
+        return self._meta[table]
 
-    def query(self, table: str, query: list[dict], fmt: str = "json-stat2") -> dict:
-        """POST a raw PxWeb query (list of ``{"code", "selection"}``) and return the parsed JSON."""
-        body = {"query": query, "response": {"format": fmt}}
-        return self._request("POST", self._url(table), json=body).json()
+    def get_records(self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False) -> list[dict]:
+        """Fetch data as a list of records, one per cell.
+
+        ``selections`` maps a variable (code or label, case-insensitive) to a value code or label,
+        a list of them, a glob pattern (``"20*"``, ``"*"``), or ``"top:N"``. Variables not mentioned
+        are fully selected. Queries over the server's cell limit are split and the results merged.
+        """
+        resolved = q.resolve(self.metadata(table), selections)
+        records: list[dict] = []
+        for chunk in q.split(resolved, self._max_cells):
+            records.extend(to_records(self._post(table, [r.to_json() for r in chunk]), codes=codes))
+        return records
