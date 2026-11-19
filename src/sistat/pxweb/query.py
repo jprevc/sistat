@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import fnmatch
+import unicodedata
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import TypeVar
 
 from ..errors import QueryError
 from .models import TableMetadata, Variable
+
+T = TypeVar("T")
 
 Selection = str | int | Iterable[str | int]
 
@@ -30,45 +34,65 @@ class Resolved:
         return {"code": self.variable.code, "selection": {"filter": "item", "values": list(self.codes or ())}}
 
 
-def _norm(s: str) -> str:
+def fold(s: str) -> str:
+    """Case- and accent-insensitive form (also stripped), so ' cas' matches 'Čas'."""
+    return "".join(c for c in unicodedata.normalize("NFKD", _casefold(s)) if not unicodedata.combining(c))
+
+
+def _casefold(s: str) -> str:
     return s.casefold().strip()
 
 
+def _matches(key: str, candidates: Iterable[tuple[T, str, str]]) -> list[T]:
+    """Items whose code or label matches ``key``, from the first tier that has any.
+
+    Tiers, in order: code ignoring case, label ignoring case, code folded, label folded.
+    """
+    triples = list(candidates)
+    for norm in (_casefold, fold):
+        k = norm(key)
+        for hits in ([i for i, code, _ in triples if norm(code) == k], [i for i, _, label in triples if norm(label) == k]):
+            if hits:
+                return list(dict.fromkeys(hits))
+    return []
+
+
+def _ambiguous(key: str, where: str, labels: Iterable[str]) -> QueryError:
+    return QueryError(f"{key!r} is ambiguous in {where}: matches {', '.join(repr(t) for t in labels)}")
+
+
 def find_variable(meta: TableMetadata, key: str) -> Variable:
-    """Match a variable by code or label, case-insensitively."""
-    k = _norm(key)
-    for v in meta.variables:
-        if _norm(v.code) == k or _norm(v.text) == k:
-            return v
+    """Match a variable by code or label (see ``_matches`` and "Folded match" in GLOSSARY.md)."""
+    hits = _matches(key, ((v, v.code, v.text) for v in meta.variables))
+    if len(hits) > 1:
+        raise _ambiguous(key, repr(meta.title), (v.text for v in hits))
+    if hits:
+        return hits[0]
     choices = ", ".join(repr(v.text) for v in meta.variables)
     raise QueryError(f"Unknown variable {key!r}. Available: {choices}")
 
 
 def _resolve_values(var: Variable, wanted: Iterable[str]) -> list[str]:
-    by_code = {_norm(c): c for c in var.values}
-    by_label = {}
-    for c, t in zip(var.values, var.value_texts, strict=True):
-        by_label.setdefault(_norm(t), c)
+    pairs = list(zip(var.values, var.value_texts, strict=True))
     out: list[str] = []
     for w in wanted:
         w = str(w)
         if any(ch in w for ch in "*?["):
-            pat = _norm(w)
-            hits = [
-                c
-                for c, t in zip(var.values, var.value_texts, strict=True)
-                if fnmatch.fnmatchcase(_norm(c), pat) or fnmatch.fnmatchcase(_norm(t), pat)
-            ]
+            pat = fold(w)
+            hits = [c for c, t in pairs if any(fnmatch.fnmatchcase(fold(s), pat) for s in (c, t))]
             if not hits:
                 raise QueryError(f"Pattern {w!r} matches no value of {var.text!r}")
             out.extend(hits)
             continue
-        code = by_code.get(_norm(w)) or by_label.get(_norm(w))
-        if code is None:
+        hits = _matches(w, ((c, c, t) for c, t in pairs))
+        if not hits:
             sample = ", ".join(repr(t) for t in var.value_texts[:10])
             more = f" … ({len(var.values)} total)" if len(var.values) > 10 else ""
             raise QueryError(f"{w!r} is not a value of {var.text!r}. Values: {sample}{more}")
-        out.append(code)
+        if len(hits) > 1:
+            labels = var.labels()
+            raise _ambiguous(w, repr(var.text), (labels[c] for c in hits))
+        out.append(hits[0])
     return list(dict.fromkeys(out))  # dedupe, keep order
 
 

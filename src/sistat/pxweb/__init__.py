@@ -2,6 +2,6 @@
 
 from .client import PxWebClient
 from .models import ServerLimits, TableInfo, TableMetadata, Variable
-from .query import Selection
+from .query import Selection, fold
 
-__all__ = ["PxWebClient", "Selection", "ServerLimits", "TableInfo", "TableMetadata", "Variable"]
+__all__ = ["PxWebClient", "Selection", "ServerLimits", "TableInfo", "TableMetadata", "Variable", "fold"]

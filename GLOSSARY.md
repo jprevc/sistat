@@ -28,6 +28,10 @@ _Avoid_: data point, observation
 What the user asks for on one Variable: a Value by code or label, several Values, a glob pattern, or the first N Values. A Variable that isn't mentioned is selected in full.
 _Avoid_: filter, query
 
+**Folded match**:
+How user text is compared with codes and labels: ignoring case and accents, so `"cas"` matches `"čas"`. Table search and Selections (Variables, Values, glob patterns) share this rule. In a Selection, the first tier with any hit wins: code ignoring case, then label ignoring case, then code folded, then label folded. If that tier has more than one distinct candidate, the Selection is ambiguous and raises a `QueryError`. A glob selects every match and is never ambiguous.
+_Avoid_: fuzzy match, normalised match
+
 **Record**:
 A Cell flattened into one mapping of Variable label to Value label, plus the number.
 _Avoid_: row

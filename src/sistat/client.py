@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-import unicodedata
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import httpx
 
-from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata
-
-if TYPE_CHECKING:
-    import pandas as pd
+from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
 
 API_ROOT = "https://pxweb.stat.si/SiStatData/api/v1"
 DATABASE = "Data"
@@ -25,17 +21,12 @@ def table_id(table: str) -> str:
     return t.upper() + ".px"
 
 
-def _fold(s: str) -> str:
-    """Case- and accent-insensitive form, so 'brezposelnost' matches 'Brezposelnost' and 'cas' matches 'čas'."""
-    return "".join(c for c in unicodedata.normalize("NFKD", s.casefold()) if not unicodedata.combining(c))
-
-
 class Client:
     """Client for the SiStat database of the Statistical Office of Slovenia (SURS).
 
     >>> c = Client(lang="en")
     >>> c.search("air temperature")
-    >>> df = c.get("0156101S", {"METEOROLOGICAL STATION": "Ljubljana, Bežigrad"})
+    >>> records = c.get_records("0156101S", {"METEOROLOGICAL STATION": "Ljubljana, Bežigrad"})
     """
 
     def __init__(
@@ -72,8 +63,8 @@ class Client:
 
     def search(self, text: str) -> list[TableInfo]:
         """Tables whose id or title contains every word of ``text`` (case- and accent-insensitive)."""
-        words = _fold(text).split()
-        return [t for t in self.tables() if all(w in _fold(f"{t.id} {t.text}") for w in words)]
+        words = fold(text).split()
+        return [t for t in self.tables() if all(w in fold(f"{t.id} {t.text}") for w in words)]
 
     def metadata(self, table: str) -> TableMetadata:
         return self.px.metadata(table_id(table))
@@ -81,11 +72,7 @@ class Client:
     # -- data ---------------------------------------------------------------
 
     def get_records(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> list[dict]:
-        """Fetch data as a list of dicts, one per cell. See :meth:`get` for ``selections``."""
-        return self.px.get_records(table_id(table), selections, codes=codes)
-
-    def get(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> pd.DataFrame:
-        """Fetch data as a long-format pandas DataFrame.
+        """Fetch data as a list of dicts, one per cell (long format).
 
         ``selections`` maps a variable (code or English/Slovenian label, case-insensitive) to:
 
@@ -95,9 +82,7 @@ class Client:
 
         Variables you don't mention are fully selected. Large queries are split
         automatically to respect the server's cell limit.
+
+        For a DataFrame, pass the result to ``pandas.DataFrame(...)`` or ``polars.DataFrame(...)``.
         """
-        try:
-            import pandas as pd
-        except ImportError as e:  # pragma: no cover
-            raise ImportError("Client.get() needs pandas: pip install 'sistat[pandas]' (or use get_records())") from e
-        return pd.DataFrame.from_records(self.get_records(table, selections, codes=codes))
+        return self.px.get_records(table_id(table), selections, codes=codes)
