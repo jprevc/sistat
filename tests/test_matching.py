@@ -2,7 +2,7 @@
 
 import pytest
 
-from sistat import QueryError
+from sistat.pxweb import QueryError
 from sistat.pxweb.models import TableMetadata, Variable
 from sistat.pxweb.query import resolve
 

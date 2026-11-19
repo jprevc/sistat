@@ -3,10 +3,9 @@ import json
 import httpx
 import pytest
 
-from sistat import APIError, Client, QueryError
-from sistat.pxweb import PxWebClient, ServerLimits
+from sistat.pxweb import APIError, PxWebClient, QueryError, ServerLimits
 
-from .conftest import FakePxWeb
+from .conftest import make_fake
 
 TABLE = "0156101S.px"
 STATION = "METEOROLOGICAL STATION"
@@ -65,7 +64,7 @@ def test_unknown_value_lists_choices(px):
 
 
 def test_large_query_is_split_and_merged():
-    fake = FakePxWeb(max_cells=30)
+    fake = make_fake(max_cells=30)
     with PxWebClient("https://example.test/api/v1", "Data", "en", transport=httpx.MockTransport(fake)) as px:
         recs = px.get_records(TABLE, {STATION: ["10", "11"], "PERIOD, YEAR": ["1981-1990", "1991-2000"]})
     assert len(recs) == 52
@@ -106,6 +105,14 @@ def test_limits_are_typed(px):
 def test_constructing_a_client_makes_no_request(fake):
     with PxWebClient("https://example.test/api/v1", "Data", "en", transport=httpx.MockTransport(fake)):
         pass
-    with Client(transport=httpx.MockTransport(fake)):
-        pass
     assert fake.requests == []
+
+
+def test_user_agent_defaults_to_pxweb_and_can_be_overridden(fake):
+    transport = httpx.MockTransport(fake)
+    with PxWebClient("https://example.test/api/v1", "Data", "en", transport=transport) as c:
+        c.list()
+    with PxWebClient("https://example.test/api/v1", "Data", "en", transport=transport, user_agent="my-app/1.0") as c:
+        c.list()
+    agents = [r.headers["User-Agent"] for r in fake.requests if r.url.query != b"config"]
+    assert agents == ["pxweb-python", "my-app/1.0"]

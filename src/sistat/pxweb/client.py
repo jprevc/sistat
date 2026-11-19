@@ -19,6 +19,8 @@ from .jsonstat import to_records
 from .models import ServerLimits, TableInfo, TableMetadata
 from .session import Session
 
+USER_AGENT = "pxweb-python"
+
 
 class PxWebClient:
     def __init__(
@@ -30,13 +32,17 @@ class PxWebClient:
         timeout: float = 30.0,
         retries: int = 3,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str = USER_AGENT,
     ):
-        """``api_root`` is the part before the language, e.g. ``https://host/App/api/v1``."""
+        """``api_root`` is the part before the language, e.g. ``https://host/App/api/v1``.
+
+        Applications built on this client should pass their own ``user_agent`` so server operators can tell them apart.
+        """
         self.api_root = api_root.rstrip("/")
         self.database = database
         self.lang = lang
         self.retries = retries
-        self._http = httpx.Client(timeout=timeout, transport=transport, headers={"User-Agent": "sistat-python"})
+        self._http = httpx.Client(timeout=timeout, transport=transport, headers={"User-Agent": user_agent})
         self._session = Session(self._http, f"{self.api_root}/{lang}/?config", retries=retries)
         self._meta: dict[str, TableMetadata] = {}
 

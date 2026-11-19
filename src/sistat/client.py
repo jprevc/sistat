@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from importlib.metadata import version
 from types import TracebackType
 from typing import Any, Literal
 
@@ -12,6 +13,7 @@ from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
 
 API_ROOT = "https://pxweb.stat.si/SiStatData/api/v1"
 DATABASE = "Data"
+USER_AGENT = f"sistat-python/{version('sistat')}"
 
 
 def table_id(table: str) -> str:
@@ -38,7 +40,7 @@ class Client:
         timeout: float = 60.0,
         transport: httpx.BaseTransport | None = None,
     ):
-        self.px = PxWebClient(api_root, DATABASE, lang, timeout=timeout, transport=transport)
+        self.px = PxWebClient(api_root, DATABASE, lang, timeout=timeout, transport=transport, user_agent=USER_AGENT)
         self._tables: list[TableInfo] | None = None
 
     @property

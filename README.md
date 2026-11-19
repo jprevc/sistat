@@ -73,8 +73,11 @@ under the server's rate limit automatically.
 
 - `sistat.pxweb`: a generic PxWeb **v1** client that works on its own:
   `PxWebClient.get_records(table, selections)` resolves selections by label or code, splits
-  queries at the server's cell limit, rate-limits, and returns merged records. It never imports
-  from the SiStat layer, so it could be split into its own package.
+  queries at the server's cell limit, rate-limits, and returns merged records. It owns the error
+  classes (`PxWebError`, `APIError`, `QueryError`, re-exported by `sistat`), logs to the `pxweb`
+  logger, and ships an in-memory test server in `sistat.pxweb.testing`. It never imports from the
+  SiStat layer, and is being extracted into its own package, `pxweb-client`
+  (see [ADR 0001](docs/adr/0001-extract-pxweb-package.md)).
 - `sistat.Client`: SiStat specifics such as the base URL, table-id normalisation, cached table
   search.
 

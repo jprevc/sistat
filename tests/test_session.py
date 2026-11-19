@@ -7,8 +7,7 @@ import time
 import httpx
 import pytest
 
-from sistat import APIError
-from sistat.pxweb import ServerLimits
+from sistat.pxweb import APIError, ServerLimits
 from sistat.pxweb.models import DEFAULT_LIMITS
 from sistat.pxweb.session import CONFIG_TIMEOUT, Session
 
@@ -156,20 +155,20 @@ def test_config_is_fetched_lazily_and_once(clock):
 )
 def test_failed_config_falls_back_to_defaults_at_once_and_warns(clock, caplog, config):
     server = Server(config=config)
-    with caplog.at_level(logging.WARNING, logger="sistat"):
+    with caplog.at_level(logging.WARNING, logger="pxweb"):
         session = make_session(server, clock)
         session.send("GET", URL)
         session.send("GET", URL)
     assert session.limits == DEFAULT_LIMITS
     assert len(server.config_requests) == 1
     assert clock.sleeps == []
-    assert [r.levelname for r in caplog.records if r.name.startswith("sistat")] == ["WARNING"]
+    assert [r.levelname for r in caplog.records if r.name.startswith("pxweb")] == ["WARNING"]
 
 
 def test_successful_config_logs_nothing(clock, caplog):
-    with caplog.at_level(logging.DEBUG, logger="sistat"):
+    with caplog.at_level(logging.DEBUG, logger="pxweb"):
         make_session(Server(), clock).send("GET", URL)
-    assert not [r for r in caplog.records if r.name.startswith("sistat")]
+    assert not [r for r in caplog.records if r.name.startswith("pxweb")]
 
 
 def test_config_request_uses_short_timeout(clock):
