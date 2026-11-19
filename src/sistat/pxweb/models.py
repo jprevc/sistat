@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -15,7 +16,7 @@ class TableInfo:
     updated: str | None = None
 
     @classmethod
-    def from_json(cls, d: dict) -> TableInfo:
+    def from_json(cls, d: dict[str, Any]) -> TableInfo:
         return cls(id=d["id"], text=d.get("text", ""), type=d.get("type", "t"), updated=d.get("updated"))
 
 
@@ -31,7 +32,7 @@ class Variable:
     time: bool = False
 
     @classmethod
-    def from_json(cls, d: dict) -> Variable:
+    def from_json(cls, d: dict[str, Any]) -> Variable:
         values = tuple(d.get("values", ()))
         return cls(
             code=d["code"],
@@ -53,7 +54,7 @@ class TableMetadata:
     variables: tuple[Variable, ...] = field(default_factory=tuple)
 
     @classmethod
-    def from_json(cls, d: dict) -> TableMetadata:
+    def from_json(cls, d: dict[str, Any]) -> TableMetadata:
         return cls(title=d.get("title", ""), variables=tuple(Variable.from_json(v) for v in d.get("variables", ())))
 
     @property
@@ -75,7 +76,7 @@ class ServerLimits:
     time_window: float
 
     @classmethod
-    def from_config(cls, cfg: dict) -> ServerLimits:
+    def from_config(cls, cfg: dict[str, Any]) -> ServerLimits:
         """Parse a PxWeb ``?config`` response; keys it lacks fall back to :data:`DEFAULT_LIMITS`."""
         d = DEFAULT_LIMITS
         return cls(

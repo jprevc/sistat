@@ -12,7 +12,7 @@ def meta(*labels: str, codes: tuple[str, ...] | None = None) -> TableMetadata:
     return TableMetadata(title="t", variables=(Variable(code="KRAJ", text="PLACE", values=codes, value_texts=labels),))
 
 
-def picked(m: TableMetadata, sel) -> list[str]:
+def picked(m: TableMetadata, sel) -> list[str] | None:
     (r,) = resolve(m, {"PLACE": sel})
     return r.codes
 

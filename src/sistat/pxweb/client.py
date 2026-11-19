@@ -6,7 +6,10 @@ Knows nothing about SiStat specifically: give it any PxWeb v1 base URL
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Mapping
+from types import TracebackType
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -46,10 +49,10 @@ class PxWebClient:
     def close(self) -> None:
         self._http.close()
 
-    def __enter__(self):
+    def __enter__(self) -> PxWebClient:
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
         self.close()
 
     def _url(self, path: str = "") -> str:
@@ -63,10 +66,11 @@ class PxWebClient:
         """The server's cell limit and rate limit, read from ``?config`` on first use (defaults if unavailable)."""
         return self._session.limits
 
-    def _post(self, table: str, query: list[dict]) -> dict:
+    def _post(self, table: str, query: builtins.list[dict[str, Any]]) -> dict[str, Any]:
         """POST a raw PxWeb query (list of ``{"code", "selection"}``) and return the json-stat2 dataset."""
         body = {"query": query, "response": {"format": "json-stat2"}}
-        return self._session.send("POST", self._url(table), json=body).json()
+        dataset: dict[str, Any] = self._session.send("POST", self._url(table), json=body).json()
+        return dataset
 
     def list(self, path: str = "") -> list[TableInfo]:
         """List tables (and folders) at ``path`` within the database."""
@@ -78,7 +82,9 @@ class PxWebClient:
             self._meta[table] = TableMetadata.from_json(self._session.send("GET", self._url(table)).json())
         return self._meta[table]
 
-    def get_records(self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False) -> list[dict]:
+    def get_records(
+        self, table: str, selections: Mapping[str, q.Selection] | None = None, *, codes: bool = False
+    ) -> builtins.list[dict[str, Any]]:
         """Fetch data as a list of records, one per cell.
 
         ``selections`` maps a variable (code or label, case-insensitive) to a value code or label,
@@ -86,7 +92,7 @@ class PxWebClient:
         are fully selected. Queries over the server's cell limit are split and the results merged.
         """
         resolved = q.resolve(self.metadata(table), selections)
-        records: list[dict] = []
+        records: builtins.list[dict[str, Any]] = []
         for chunk in q.split(resolved, self.limits.cell_limit):
             records.extend(to_records(self._post(table, [r.to_json() for r in chunk]), codes=codes))
         return records

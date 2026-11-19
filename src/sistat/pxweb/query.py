@@ -6,7 +6,7 @@ import fnmatch
 import unicodedata
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from ..errors import QueryError
 from .models import TableMetadata, Variable
@@ -28,7 +28,7 @@ class Resolved:
     def count(self) -> int:
         return min(self.top, len(self.variable.values)) if self.top is not None else len(self.codes or ())
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         if self.top is not None:
             return {"code": self.variable.code, "selection": {"filter": "top", "values": [str(self.top)]}}
         return {"code": self.variable.code, "selection": {"filter": "item", "values": list(self.codes or ())}}
@@ -72,11 +72,11 @@ def find_variable(meta: TableMetadata, key: str) -> Variable:
     raise QueryError(f"Unknown variable {key!r}. Available: {choices}")
 
 
-def _resolve_values(var: Variable, wanted: Iterable[str]) -> list[str]:
+def _resolve_values(var: Variable, wanted: Iterable[str | int]) -> list[str]:
     pairs = list(zip(var.values, var.value_texts, strict=True))
     out: list[str] = []
-    for w in wanted:
-        w = str(w)
+    for item in wanted:
+        w = str(item)
         if any(ch in w for ch in "*?["):
             pat = fold(w)
             hits = [c for c, t in pairs if any(fnmatch.fnmatchcase(fold(s), pat) for s in (c, t))]
@@ -135,8 +135,9 @@ def split(resolved: list[Resolved], max_cells: int) -> list[list[Resolved]]:
     candidates = [i for i, r in enumerate(resolved) if r.codes is not None and len(r.codes) > 1]
     if not candidates:
         raise QueryError(f"Query of {cell_count(resolved)} cells exceeds the server limit of {max_cells} and cannot be split")
-    i = max(candidates, key=lambda j: len(resolved[j].codes))
+    i = max(candidates, key=lambda j: len(resolved[j].codes or ()))
     codes = resolved[i].codes
+    assert codes is not None  # guaranteed by the candidates filter
     rest = cell_count(resolved) // len(codes)
     per_chunk = max(1, max_cells // rest)
     chunks = []
