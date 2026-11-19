@@ -11,10 +11,15 @@ whose v1 API is documented in
 ## Install
 
 ```bash
-pip install "sistat[pandas]"
+pip install sistat
 ```
 
-Without the `pandas` extra, `get_records()` returns plain dicts.
+This gives you `search()`, `metadata()` and `get_records()`, which returns plain dicts. To get data
+as a pandas DataFrame with `get()` (used in the examples below), install the `pandas` extra:
+
+```bash
+pip install "sistat[pandas]"
+```
 
 ## Usage
 
