@@ -11,7 +11,7 @@ whose v1 API is documented in
 ## Install
 
 ```bash
-pip install "sistat[pandas] @ git+https://github.com/jprevc/sistat"
+pip install "sistat[pandas]"
 ```
 
 Without the `pandas` extra, `get_records()` returns plain dicts.
