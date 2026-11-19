@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -10,7 +11,7 @@ from sistat.pxweb import PxWebClient
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def load(name: str):
+def load(name: str) -> Any:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
@@ -34,7 +35,7 @@ class FakePxWeb:
             return httpx.Response(200, json=self._data(json.loads(request.content)))
         return httpx.Response(400, text="Bad Request")
 
-    def _data(self, body: dict) -> dict:
+    def _data(self, body: dict[str, Any]) -> dict[str, Any]:
         """Answer a query by slicing the real fixture (stations 10,11 x first 2 periods x 13 measures)."""
         full = load("data_0156101S.json")
         ids, sizes = full["id"], full["size"]
@@ -51,7 +52,7 @@ class FakePxWeb:
         from itertools import product
 
         values = [full["value"][sum(cats[d].index(c) * strides[d] for d, c in enumerate(combo))] for combo in product(*keep)]
-        out = json.loads(json.dumps(full))
+        out: dict[str, Any] = json.loads(json.dumps(full))
         out["size"] = [len(k) for k in keep]
         for d, dim in enumerate(ids):
             cat = out["dimension"][dim]["category"]

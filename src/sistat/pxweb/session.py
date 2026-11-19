@@ -6,7 +6,7 @@ import logging
 import threading
 import time
 from collections import deque
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 
@@ -95,7 +95,7 @@ class Session:
                 self._calls.popleft()
             self._calls.append(self._clock.monotonic())
 
-    def send(self, method: str, url: str, **kw) -> httpx.Response:
+    def send(self, method: str, url: str, **kw: Any) -> httpx.Response:
         """Send a request under the server's rate limit, retrying transient failures; raise :class:`APIError` on error."""
         attempt = 0
         while True:

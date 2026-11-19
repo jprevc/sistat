@@ -6,7 +6,7 @@ from itertools import product
 from typing import Any
 
 
-def _ordered_categories(dim: dict) -> list[str]:
+def _ordered_categories(dim: dict[str, Any]) -> list[str]:
     index = dim["category"].get("index")
     if index is None:  # single-category dimension may omit index
         return list(dim["category"]["label"])
@@ -15,21 +15,21 @@ def _ordered_categories(dim: dict) -> list[str]:
     return sorted(index, key=index.__getitem__)
 
 
-def _cell_lookup(obj: Any, n: int) -> list:
+def _cell_lookup(obj: Any, n: int) -> list[Any]:
     """json-stat allows value/status as a dense list, a sparse {index: v} dict, or (status) a single scalar."""
     if obj is None:
         return [None] * n
     if isinstance(obj, list):
         return obj
     if isinstance(obj, dict):
-        out = [None] * n
+        out: list[Any] = [None] * n
         for k, v in obj.items():
             out[int(k)] = v
         return out
     return [obj] * n
 
 
-def to_records(dataset: dict, *, codes: bool = False) -> list[dict]:
+def to_records(dataset: dict[str, Any], *, codes: bool = False) -> list[dict[str, Any]]:
     """Flatten a json-stat2 dataset into one dict per cell (long/tidy format).
 
     Columns are the dimension labels holding value labels, plus ``value``.

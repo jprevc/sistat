@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from types import TracebackType
+from typing import Any, Literal
 
 import httpx
 
@@ -47,10 +48,10 @@ class Client:
     def close(self) -> None:
         self.px.close()
 
-    def __enter__(self):
+    def __enter__(self) -> Client:
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None) -> None:
         self.close()
 
     # -- discovery ----------------------------------------------------------
@@ -71,7 +72,7 @@ class Client:
 
     # -- data ---------------------------------------------------------------
 
-    def get_records(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> list[dict]:
+    def get_records(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> list[dict[str, Any]]:
         """Fetch data as a list of dicts, one per cell (long format).
 
         ``selections`` maps a variable (code or English/Slovenian label, case-insensitive) to:
