@@ -61,7 +61,7 @@ class Client:
     def tables(self, refresh: bool = False) -> list[TableInfo]:
         """All tables in SiStat (one request, cached on the client)."""
         if self._tables is None or refresh:
-            self._tables = [t for t in self.px.list() if t.type == "t"]
+            self._tables = [t for t in self.px.tables() if t.type == "t"]
         return self._tables
 
     def search(self, text: str) -> list[TableInfo]:

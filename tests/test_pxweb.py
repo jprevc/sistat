@@ -111,8 +111,8 @@ def test_constructing_a_client_makes_no_request(fake):
 def test_user_agent_defaults_to_pxweb_and_can_be_overridden(fake):
     transport = httpx.MockTransport(fake)
     with PxWebClient("https://example.test/api/v1", "Data", "en", transport=transport) as c:
-        c.list()
+        c.tables()
     with PxWebClient("https://example.test/api/v1", "Data", "en", transport=transport, user_agent="my-app/1.0") as c:
-        c.list()
+        c.tables()
     agents = [r.headers["User-Agent"] for r in fake.requests if r.url.query != b"config"]
     assert agents == ["pxweb-python", "my-app/1.0"]
