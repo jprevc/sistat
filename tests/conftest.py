@@ -5,6 +5,7 @@ import httpx
 import pytest
 
 from sistat import Client
+from sistat.pxweb import PxWebClient
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -13,8 +14,8 @@ def load(name: str):
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
-class FakeSiStat:
-    """In-memory stand-in for the SiStat API, recording every request."""
+class FakePxWeb:
+    """In-memory PxWeb v1 server serving the SiStat fixtures, recording every request."""
 
     def __init__(self, max_cells: int = 50_000_000):
         self.requests: list[httpx.Request] = []
@@ -62,7 +63,13 @@ class FakeSiStat:
 
 @pytest.fixture
 def fake():
-    return FakeSiStat()
+    return FakePxWeb()
+
+
+@pytest.fixture
+def px(fake):
+    with PxWebClient("https://example.test/api/v1", "Data", "en", transport=httpx.MockTransport(fake)) as c:
+        yield c
 
 
 @pytest.fixture

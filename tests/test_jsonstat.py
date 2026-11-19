@@ -1,4 +1,4 @@
-from sistat.pxweb import to_records
+from sistat.pxweb.jsonstat import to_records
 
 
 def ds(**kw):
