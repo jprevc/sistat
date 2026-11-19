@@ -3,8 +3,8 @@ import json
 import httpx
 import pytest
 
-from sistat import APIError, QueryError
-from sistat.pxweb import PxWebClient
+from sistat import APIError, Client, QueryError
+from sistat.pxweb import PxWebClient, ServerLimits
 
 from .conftest import FakePxWeb
 
@@ -84,3 +84,15 @@ def test_api_error(px):
     with pytest.raises(APIError) as e:
         px.metadata("NOPE.px")
     assert e.value.status_code == 400
+
+
+def test_limits_are_typed(px):
+    assert px.limits == ServerLimits(cell_limit=50_000_000, max_calls=500, time_window=10.0)
+
+
+def test_constructing_a_client_makes_no_request(fake):
+    with PxWebClient("https://example.test/api/v1", "Data", "en", transport=httpx.MockTransport(fake)):
+        pass
+    with Client(transport=httpx.MockTransport(fake)):
+        pass
+    assert fake.requests == []
