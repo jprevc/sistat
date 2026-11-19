@@ -1,8 +1,9 @@
 import httpx
+import pxweb
 import pytest
 
 import sistat
-from sistat import Client, pxweb, table_id
+from sistat import Client, table_id
 
 STATION = "METEOROLOGICAL STATION"
 

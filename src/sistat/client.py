@@ -8,8 +8,7 @@ from types import TracebackType
 from typing import Any, Literal
 
 import httpx
-
-from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
+from pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
 
 API_ROOT = "https://pxweb.stat.si/SiStatData/api/v1"
 DATABASE = "Data"

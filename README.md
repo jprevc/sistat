@@ -14,7 +14,7 @@ whose v1 API is documented in
 pip install sistat
 ```
 
-Its only dependency is `httpx`.
+It depends on [`pxweb-client`](https://github.com/jprevc/pxweb), a generic PxWeb v1 client, and `httpx`.
 
 ## Usage
 
@@ -71,15 +71,11 @@ under the server's rate limit automatically.
 
 ## Layout
 
-- `sistat.pxweb`: a generic PxWeb **v1** client that works on its own:
-  `PxWebClient.get_records(table, selections)` resolves selections by label or code, splits
-  queries at the server's cell limit, rate-limits, and returns merged records. It owns the error
-  classes (`PxWebError`, `APIError`, `QueryError`, re-exported by `sistat`), logs to the `pxweb`
-  logger, and ships an in-memory test server in `sistat.pxweb.testing`. It never imports from the
-  SiStat layer, and is being extracted into its own package, `pxweb-client`
-  (see [ADR 0001](docs/adr/0001-extract-pxweb-package.md)).
-- `sistat.Client`: SiStat specifics such as the base URL, table-id normalisation, cached table
-  search.
+`sistat.Client` adds SiStat specifics (the base URL, table-id normalisation, cached table search)
+on top of [`pxweb-client`](https://github.com/jprevc/pxweb), which does the PxWeb v1 work:
+resolving selections, splitting queries at the cell limit, rate limiting, and turning responses
+into records. Errors are pxweb's (`PxWebError`, `APIError`, `QueryError`), re-exported by
+`sistat`. See [ADR 0001](docs/adr/0001-extract-pxweb-package.md) for why they are separate.
 
 ## Development
 
