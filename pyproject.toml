@@ -22,16 +22,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
-[project.optional-dependencies]
-pandas = ["pandas>=2.0"]
-
 [project.urls]
 Homepage = "https://github.com/jprevc/sistat"
 Repository = "https://github.com/jprevc/sistat"
 Issues = "https://github.com/jprevc/sistat/issues"
 
 [dependency-groups]
-dev = ["pytest>=8", "pandas>=2.0", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [build-system]
 requires = ["hatchling>=1.26"]
