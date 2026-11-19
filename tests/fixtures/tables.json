@@ -1,0 +1,32 @@
+[
+ {
+  "id": "0156101S.px",
+  "type": "t",
+  "text": "Average annual and monthly air temperatures [°C] by meteorological stations, Slovenia, 1981 - 2014",
+  "updated": "2022-01-24T10:30:00"
+ },
+ {
+  "id": "0156102S.px",
+  "type": "t",
+  "text": "Annual and monthly precipitations [mm] by meteorological stations, Slovenia, 1981 - 2014",
+  "updated": "2022-01-24T10:30:00"
+ },
+ {
+  "id": "05G1010S.px",
+  "type": "t",
+  "text": "Registered unemployed persons by duration of registered unemployment and country of birth, Slovenia, 2005 - 2010",
+  "updated": "2022-01-24T10:30:00"
+ },
+ {
+  "id": "05W2107S.px",
+  "type": "t",
+  "text": "Unemployed persons by age groups, sex and education, statistical regions, Slovenia, census 2002",
+  "updated": "2026-04-02T12:00:00"
+ },
+ {
+  "id": "0700950S.px",
+  "type": "t",
+  "text": "Persons in employment, registered unemployed persons and registered unemployment rate by statistical regions of residence and by sex, Slovenia, 2005M01 - 2016M12",
+  "updated": "2022-01-24T10:30:00"
+ }
+]
