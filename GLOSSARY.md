@@ -35,3 +35,7 @@ _Avoid_: row
 **Cell limit**:
 The most Cells the server will return for one request. Larger requests have to be split.
 _Avoid_: max values
+
+**Rate limit**:
+The most requests the server accepts within a time window. Exceeding it gets requests rejected until the window passes.
+_Avoid_: throttle, quota
