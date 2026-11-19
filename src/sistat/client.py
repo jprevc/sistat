@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import httpx
 
 from .pxweb import PxWebClient, Selection, TableInfo, TableMetadata, fold
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 API_ROOT = "https://pxweb.stat.si/SiStatData/api/v1"
 DATABASE = "Data"
@@ -29,7 +26,7 @@ class Client:
 
     >>> c = Client(lang="en")
     >>> c.search("air temperature")
-    >>> df = c.get("0156101S", {"METEOROLOGICAL STATION": "Ljubljana, Bežigrad"})
+    >>> records = c.get_records("0156101S", {"METEOROLOGICAL STATION": "Ljubljana, Bežigrad"})
     """
 
     def __init__(
@@ -75,11 +72,7 @@ class Client:
     # -- data ---------------------------------------------------------------
 
     def get_records(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> list[dict]:
-        """Fetch data as a list of dicts, one per cell. See :meth:`get` for ``selections``."""
-        return self.px.get_records(table_id(table), selections, codes=codes)
-
-    def get(self, table: str, selections: Mapping[str, Selection] | None = None, *, codes: bool = False) -> pd.DataFrame:
-        """Fetch data as a long-format pandas DataFrame.
+        """Fetch data as a list of dicts, one per cell (long format).
 
         ``selections`` maps a variable (code or English/Slovenian label, case-insensitive) to:
 
@@ -89,9 +82,7 @@ class Client:
 
         Variables you don't mention are fully selected. Large queries are split
         automatically to respect the server's cell limit.
+
+        For a DataFrame, pass the result to ``pandas.DataFrame(...)`` or ``polars.DataFrame(...)``.
         """
-        try:
-            import pandas as pd
-        except ImportError as e:  # pragma: no cover
-            raise ImportError("Client.get() needs pandas: pip install 'sistat[pandas]' (or use get_records())") from e
-        return pd.DataFrame.from_records(self.get_records(table, selections, codes=codes))
+        return self.px.get_records(table_id(table), selections, codes=codes)

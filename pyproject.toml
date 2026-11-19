@@ -1,6 +1,6 @@
 [project]
 name = "sistat"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Python client for SiStat, the database of the Statistical Office of Slovenia (SURS), via its PxWeb API"
 readme = "README.md"
 license = "MIT"
@@ -9,23 +9,36 @@ requires-python = ">=3.10"
 dependencies = ["httpx>=0.27"]
 keywords = ["slovenia", "statistics", "surs", "sistat", "pxweb", "open-data"]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
-[project.optional-dependencies]
-pandas = ["pandas>=2.0"]
-
 [project.urls]
+Homepage = "https://github.com/jprevc/sistat"
 Repository = "https://github.com/jprevc/sistat"
+Issues = "https://github.com/jprevc/sistat/issues"
 
 [dependency-groups]
-dev = ["pytest>=8", "pandas>=2.0", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [build-system]
 requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/sistat/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/sistat", "tests", "README.md", "LICENSE", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -32,17 +32,17 @@ def test_metadata_accepts_unnormalised_ids(client, fake):
     assert sum(r.url.path.endswith("/0156101S.px") for r in fake.requests) == 1
 
 
-def test_get_returns_long_dataframe(client):
-    df = client.get("0156101s", {STATION: ["Ljubljana, Bežigrad", "11"], "PERIOD, YEAR": "top:2"})
-    assert list(df.columns) == [STATION, "PERIOD, YEAR", "MEASURE", "value"]
-    assert len(df) == 2 * 2 * 13
-    row = df[(df[STATION] == "Maribor, Tabor") & (df["PERIOD, YEAR"] == "1981-1990") & (df["MEASURE"] == "January")]
-    assert row["value"].item() == -0.9
+def test_get_records_returns_long_records(client):
+    recs = client.get_records("0156101s", {STATION: ["Ljubljana, Bežigrad", "11"], "PERIOD, YEAR": "top:2"})
+    assert list(recs[0]) == [STATION, "PERIOD, YEAR", "MEASURE", "value"]
+    assert len(recs) == 2 * 2 * 13
+    [row] = [r for r in recs if r[STATION] == "Maribor, Tabor" and r["PERIOD, YEAR"] == "1981-1990" and r["MEASURE"] == "January"]
+    assert row["value"] == -0.9
 
 
 @pytest.mark.live
 def test_live_roundtrip():
     with Client() as c:
         assert len(c.tables()) > 1000
-        df = c.get("0156101S", {STATION: "Ljubljana, Bežigrad", "PERIOD, YEAR": "2014", "MEASURE": "January"})
-        assert len(df) == 1 and df["value"].notna().all()
+        [rec] = c.get_records("0156101S", {STATION: "Ljubljana, Bežigrad", "PERIOD, YEAR": "2014", "MEASURE": "January"})
+        assert rec["value"] is not None

@@ -2,7 +2,7 @@
 
 A small Python client for [SiStat](https://pxweb.stat.si/SiStat), the statistical database of the
 Statistical Office of the Republic of Slovenia (SURS). Use it to search tables, inspect their
-variables, and download data as a pandas DataFrame.
+variables, and download data as plain records, ready for pandas, polars or anything else.
 
 SiStat runs [PxWeb](https://www.scb.se/en/services/statistical-programs-for-px-files/px-web/),
 whose v1 API is documented in
@@ -11,10 +11,10 @@ whose v1 API is documented in
 ## Install
 
 ```bash
-pip install "sistat[pandas] @ git+https://github.com/jprevc/sistat"
+pip install sistat
 ```
 
-Without the `pandas` extra, `get_records()` returns plain dicts.
+Its only dependency is `httpx`.
 
 ## Usage
 
@@ -33,13 +33,18 @@ for v in meta.variables:
 # OBDOBJE, LETO | PERIOD, YEAR | ('1981-1990', '1991-2000', '2001-2010')
 # MERITVE | MEASURE | ('Average temperature - ANNUAL', 'January', 'February')
 
-df = c.get(
+records = c.get_records(
     "0156101S",
     {
         "METEOROLOGICAL STATION": ["Ljubljana, Bežigrad", "Maribor, Tabor"],
         "PERIOD, YEAR": "201*",
     },
 )
+# [{'METEOROLOGICAL STATION': 'Ljubljana, Bežigrad', 'PERIOD, YEAR': '2010',
+#   'MEASURE': 'Average temperature - ANNUAL', 'value': 10.7}, ...]
+
+import pandas as pd                   # or polars: pl.DataFrame(records)
+df = pd.DataFrame(records)
 #   METEOROLOGICAL STATION  PERIOD, YEAR                       MEASURE  value
 # 0    Ljubljana, Bežigrad          2010  Average temperature - ANNUAL   10.7
 # ...
@@ -60,7 +65,7 @@ label, case-insensitively. Values can be:
 The library sends every variable you leave out with all its values selected. PxWeb would
 otherwise drop it from the result without telling you.
 
-Pass `codes=True` to also get a `<variable>_code` column with the raw value codes. Queries that
+Pass `codes=True` to also get a `<variable>_code` key with the raw value codes. Queries that
 exceed the server's cell limit are split into several requests and merged. Requests are kept
 under the server's rate limit automatically.
 
@@ -71,7 +76,7 @@ under the server's rate limit automatically.
   queries at the server's cell limit, rate-limits, and returns merged records. It never imports
   from the SiStat layer, so it could be split into its own package.
 - `sistat.Client`: SiStat specifics such as the base URL, table-id normalisation, cached table
-  search and the pandas DataFrame.
+  search.
 
 ## Development
 
