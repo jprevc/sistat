@@ -87,4 +87,4 @@ uv run pytest -m live    # hits the real API
 uv run ruff check .
 ```
 
-Data © SURS, see their [terms of use](https://www.stat.si/StatWeb/en/LegalNotice).
+Data © SURS, see their [terms of use](https://www.stat.si/StatWeb/en/StaticPages/Index/Copyright).
