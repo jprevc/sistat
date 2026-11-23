@@ -414,6 +414,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pxweb-client"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b6/bd/0128f7d7bc91cce105b69260da65353c8aef07903c61150905f802121c33/pxweb_client-0.1.0.tar.gz", hash = "sha256:a41d939e5d68793e028581634381767f1d1f726ff3e01b723fd067964a42da0e", size = 17559, upload-time = "2026-11-23T07:11:59.594Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/07/7058c09a9b1b0e737873738845673687c55bf96c7bd34010733548709d90/pxweb_client-0.1.0-py3-none-any.whl", hash = "sha256:af9848a25f3c8537a8f8467dc0798e827c2534289079724b07f331c0f18685e6", size = 14760, upload-time = "2026-11-23T07:11:58.644Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
@@ -470,6 +482,7 @@ name = "sistat"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
+    { name = "pxweb-client" },
 ]
 
 [package.dev-dependencies]
@@ -480,7 +493,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "httpx", specifier = ">=0.27" }]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "pxweb-client", specifier = ">=0.1,<0.2" },
+]
 
 [package.metadata.requires-dev]
 dev = [
