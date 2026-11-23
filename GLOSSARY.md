@@ -2,44 +2,18 @@
 
 Reading statistical data from SiStat, the PxWeb database of the Statistical Office of Slovenia (SURS).
 
+The PxWeb terms (Table, Variable, Value, Cell, Selection, Folded match, Record, Cell limit, Rate limit) are defined in [pxweb's glossary](https://github.com/jprevc/pxweb/blob/main/GLOSSARY.md). This file only adds what is specific to SiStat.
+
 ## Language
 
-### Data model
+**SiStat**:
+The statistical database of SURS, served by PxWeb as the database `Data`, in English or Slovenian.
+_Avoid_: SURS database, the API
 
-**Table**:
-A published multidimensional dataset in the database, identified by an id such as `0156101S.px`.
-_Avoid_: dataset, matrix
+**Table id**:
+A Table's id in canonical form, upper case with the `.px` suffix (`0156101S.px`). Users may write it in any case and without the suffix.
+_Avoid_: table code, matrix id
 
-**Variable**:
-One axis of a Table, with a code (often Slovenian) and a human-readable label.
-_Avoid_: dimension, column, field
-
-**Value**:
-One category of a Variable, with a code and a label.
-_Avoid_: category, item, level
-
-**Cell**:
-One combination of a Value from each Variable of a Table, carrying a single number (possibly missing) and an optional status symbol.
-_Avoid_: data point, observation
-
-### Asking for data
-
-**Selection**:
-What the user asks for on one Variable: a Value by code or label, several Values, a glob pattern, or the first N Values. A Variable that isn't mentioned is selected in full.
-_Avoid_: filter, query
-
-**Folded match**:
-How user text is compared with codes and labels: ignoring case and accents, so `"cas"` matches `"čas"`. Table search and Selections (Variables, Values, glob patterns) share this rule. In a Selection, the first tier with any hit wins: code ignoring case, then label ignoring case, then code folded, then label folded. If that tier has more than one distinct candidate, the Selection is ambiguous and raises a `QueryError`. A glob selects every match and is never ambiguous.
-_Avoid_: fuzzy match, normalised match
-
-**Record**:
-A Cell flattened into one mapping of Variable label to Value label, plus the number.
-_Avoid_: row
-
-**Cell limit**:
-The most Cells the server will return for one request. Larger requests have to be split.
-_Avoid_: max values
-
-**Rate limit**:
-The most requests the server accepts within a time window. Exceeding it gets requests rejected until the window passes.
-_Avoid_: throttle, quota
+**Table search**:
+Finding Tables whose id or title contains every word of the user's text, compared by Folded match. It runs locally over the full list of Tables, which is fetched once.
+_Avoid_: lookup, query
